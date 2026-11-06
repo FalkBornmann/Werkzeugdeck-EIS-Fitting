@@ -1,0 +1,7 @@
+__pycache__/
+.venv/
+dist/
+werkzeugdeck-dist/
+Werkzeugdeck-Pages.zip
+*.ism
+*.csv
