@@ -1,6 +1,6 @@
 # EIS-Fitting
 
-**[App im Browser öffnen](https://falkbornmann.github.io/EIS-Fitting-Web/)** · Keine Installation nötig.
+**[App im Werkzeugdeck öffnen](https://werkzeugdeck.pages.dev/Elektrochemie/Datenauswertung/EIS-Fitting/)** · Keine Installation für die Onlineversion nötig.
 
 EIS-Spektren aus Zahner-ISM oder CSV fitten und passende Ersatzschaltbilder vergleichen. Messdateien bleiben auf dem eigenen Rechner.
 
@@ -32,3 +32,7 @@ Unter Windows kann nach der Installation auch `Start-EIS-Fitting.cmd` verwendet 
 Tests: `python -m unittest discover -v`.
 
 </details>
+
+## Theorie und Bedienoberfläche
+
+Die Oberfläche folgt KeksUndTee: dunkelgrüner Kopfbereich, sandfarbene Akzente und helle Karten mit responsiven Eingaben. Eine sichtbare Einführung erklärt die Grundlagen; die ausführliche Theorie lässt sich mit Herleitungen, Rechenverfahren, Grenzen und Fachquellen aufklappen. Nutzungshinweise erläutern KI-Unterstützung, Messdatenverarbeitung, Exporte, Hosting und Haftung.
