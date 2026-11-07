@@ -3,6 +3,12 @@ const assert=require('node:assert/strict');
 const {graphTopology}=require('./graph-editor.js');
 const {predictCircuit,projectionGrid}=require('./projection.js');
 const {parseSpectrum}=require('./spectrum-preview.js');
+const {frequencyParts,frequencyFromParts,formatFrequency}=require('./projection.js');
+test('frequency fields preserve intermediate values and display every decade as a power',()=>{
+  for(const f of [1e-12,.1,1,100,123.456,1e12]){const {factor,exponent}=frequencyParts(f);assert.ok(Math.abs(frequencyFromParts(factor,exponent)/f-1)<1e-12);}
+  assert.equal(formatFrequency(.1),'10⁻¹');assert.equal(formatFrequency(1),'10⁰');assert.equal(formatFrequency(1e9),'10⁹');assert.equal(formatFrequency(250),'2,5 × 10²');
+  for(const [factor,exponent] of [[0,1],[1,.5],[1,13],[2,12],[NaN,1]])assert.throws(()=>frequencyFromParts(factor,exponent));
+});
 const raw=text=>new TextEncoder().encode(text).buffer;
 test('CSV preview handles quoted reordered columns, BOM, CRLF and descending frequencies',()=>{
   const data=parseSpectrum(raw('\ufeffextra,Zimag_ohm,frequency_Hz,Zreal_ohm\r\n'+Array.from({length:8},(_,i)=>`"a,b",-2,"${8-i}",1`).join('\r\n')),'.csv');

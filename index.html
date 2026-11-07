@@ -7,6 +7,7 @@
 
 main{max-width:1180px;margin:auto;padding:28px}section{background:white;border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:20px;min-width:0}h1{font-size:clamp(40px,6vw,76px);overflow-wrap:anywhere}.row,.actions{display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin:16px 0}.row>label{flex:1 1 160px;min-width:0;max-width:100%}input,select{max-width:100%;min-width:0}input[type=file],input[type=number]{width:100%}input[type=checkbox]{accent-color:var(--teal);width:19px;height:19px}small,#status{color:#536e79;font-size:13px}fieldset{min-width:0;border:1px solid var(--line);border-radius:8px;padding:16px;margin:16px 0}.component-options label{flex-direction:row;align-items:center}.plots{display:flex;gap:14px;flex-wrap:wrap}.plots figure{flex:1 1 420px;margin:0;min-width:0}.plots svg{width:100%;height:auto}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%}td,th{text-align:left;border-bottom:1px solid var(--line);padding:10px;font-size:14px}.editor-branch{padding:9px 0}.editor-children{border-left:2px solid #cbdade;margin:8px 0 0 8px;padding-left:12px}.editor-action{background:#edf4f4;color:#183747;font-size:13px;padding:6px 9px}.editor-branch .actions{gap:6px}output{display:block;margin:16px 0;font-weight:650}.theory li{margin:12px 0}code{overflow-wrap:anywhere}[hidden]{display:none!important}@media(max-width:760px){main{padding:18px}section{padding:18px}.actions{align-items:stretch}td,th{padding:7px}#results>.actions{align-items:flex-start;flex-direction:column}.subtitle{font-size:22px}}
 .graph-scroll{overflow:auto;border:1px solid var(--line);border-radius:8px}.graph-board{width:940px;height:410px;position:relative;background-color:#f8faf7;background-image:radial-gradient(#cbdade 1px,transparent 1px);background-size:20px 20px}.graph-wires{position:absolute;width:940px;height:410px;pointer-events:none}.graph-part{position:absolute;width:110px;height:48px}.graph-handle{width:110px;height:48px;padding:0 4px;display:flex;align-items:center;cursor:grab;background:#f0e1c7;border:2px solid #285449;touch-action:none}.graph-pin{position:absolute;width:44px;height:44px;padding:0;border:0;background:transparent;color:#087f83;font-size:24px}.graph-pin[aria-pressed=true]{background:#e6c18c;border-radius:50%}.graph-remove{position:absolute;left:35px;top:48px;padding:0;min-height:28px;width:40px;font-size:17px}.graph-palette button{font-size:12px;padding:8px}.projection-note{color:#8a4b12}header{background:#183e35;border-bottom-color:#ddbd86}:root{--teal:#216a58}
+.frequency-field{flex:1 1 235px;min-width:0;font-size:13px;font-weight:650}.frequency-input{display:flex;align-items:center;gap:6px;margin-top:6px;white-space:nowrap}.frequency-input input:first-child{width:85px}.frequency-input input.frequency-exponent{width:85px;align-self:flex-start;position:relative;top:-8px;font-size:14px}.frequency-input>span{font-size:17px}.frequency-input input{min-height:44px}
 </style>
 <body>
 <header><div class="wrap"><a class="brand" href="https://werkzeugdeck.pages.dev/">Werkzeugdeck <span>/ Elektrochemie / Datenauswertung</span></a><div class="hero"><div><p class="eyebrow">WECHSELSPANNUNG TRIFFT GRENZFLÄCHE</p><h1>EIS-Fitting</h1><p class="subtitle">Vom Spektrum zum Modell.</p><p>Impedanzspektren laden, Ersatzschaltbilder vergleichen und Fits fachlich einordnen.</p></div><div class="hero-mark" aria-hidden="true">∿<span>Prozesse im Frequenzblick</span></div></div><div class="tags"><span>Zahner ISM · CSV</span><span>Eigene Ersatzschaltbilder</span><span>Browser- oder lokaler Python-Fit</span></div></div></header>
@@ -55,7 +56,7 @@ main{max-width:1180px;margin:auto;padding:28px}section{background:white;border:1
 <p id="parameters"></p>
 <figure style="margin:16px 0"><h3>Ersatzschaltbild</h3><div id="circuit" style="overflow:auto;padding:12px;border:1px solid #d7e3ea;border-radius:8px"></div></figure>
 <div class="plots" id="plots"></div>
-<fieldset><legend>Frequenzprognose im Bode-Diagramm</legend><label class="check"><input id="project" type="checkbox"> Modell außerhalb des Messbereichs anzeigen</label><div class="row"><label>Untere Frequenz / Hz <input id="f-min" type="number" min="1e-12" max="1e12" step="any"></label><label>Obere Frequenz / Hz <input id="f-max" type="number" min="1e-12" max="1e12" step="any"></label><button id="extend-low">Unten ÷ 10</button><button id="extend-high">Oben × 10</button><button id="project-apply">Prognose aktualisieren</button><button id="project-reset">Messbereich zurücksetzen</button></div><p id="projection-status" role="status"></p><p class="notice warn">Die Prognose berechnet dasselbe Ersatzschaltbild mit den bereits gefitteten Kennwerten. Sie fügt keine Messwerte hinzu und verändert weder Fit, RMS noch AICc. Außerhalb der Messung ist der Verlauf modellabhängig; unbekannte Prozesse und unsichere Parameter können zu großen Abweichungen führen. Es wird kein Konfidenzband berechnet.</p><button id="export-projection">Modellkurve mit Bereichskennzeichnung als CSV</button></fieldset>
+<fieldset><legend>Frequenzprognose im Bode-Diagramm</legend><label class="check"><input id="project" type="checkbox"> Modell außerhalb des Messbereichs anzeigen</label><div class="row"><div class="frequency-field"><span>Untere Frequenz</span><div class="frequency-input"><input id="f-min-factor" type="number" min="0" step="any" aria-label="Vorfaktor untere Frequenz"><span>× 10</span><input id="f-min" class="frequency-exponent" type="number" min="-12" max="12" step="1" aria-label="Exponent untere Frequenz"><span>Hz</span></div></div><div class="frequency-field"><span>Obere Frequenz</span><div class="frequency-input"><input id="f-max-factor" type="number" min="0" step="any" aria-label="Vorfaktor obere Frequenz"><span>× 10</span><input id="f-max" class="frequency-exponent" type="number" min="-12" max="12" step="1" aria-label="Exponent obere Frequenz"><span>Hz</span></div></div><button id="extend-low">Unten ÷ 10</button><button id="extend-high">Oben × 10</button><button id="project-apply">Prognose aktualisieren</button><button id="project-reset">Messbereich zurücksetzen</button></div><p class="hint">Frequenz = Vorfaktor × 10<sup>Exponent</sup> Hz. Die Pfeile am Exponenten ändern die Frequenz jeweils um den Faktor 10. Über den Vorfaktor sind auch Zwischenwerte möglich.</p><p id="projection-status" role="status"></p><p class="notice warn">Die Prognose berechnet dasselbe Ersatzschaltbild mit den bereits gefitteten Kennwerten. Sie fügt keine Messwerte hinzu und verändert weder Fit, RMS noch AICc. Außerhalb der Messung ist der Verlauf modellabhängig; unbekannte Prozesse und unsichere Parameter können zu großen Abweichungen führen. Es wird kein Konfidenzband berechnet.</p><button id="export-projection">Modellkurve mit Bereichskennzeichnung als CSV</button></fieldset>
 <div class="actions" aria-label="Grafikexport"><button id="save-bode">Bode als PNG</button><button id="save-nyquist">Nyquist als PNG</button><button id="save-schaltbild">Schaltbild als PNG</button><button id="save-uebersicht">Gesamtübersicht als PNG</button><small id="export-status" role="status"></small></div>
 <p><small>Punkte: Messwerte · durchgezogene Linien: Fit im Messbereich · gestrichelte Linien auf sandfarbenem Grund: Prognose. Türkis: |Z| · Blau: |Phase|. Die Prognose erscheint auch im Bode-PNG und in der Gesamtübersicht.</small></p>
 </section>
@@ -136,7 +137,7 @@ function clearPreview() {
   $("results").hidden=true;
 }
 function showMeasurement(data,name) {
-  $("preview-summary").textContent=`${name} · ${data.f.length} Frequenzpunkte · ${formatQuantity(data.f[0])} bis ${formatQuantity(data.f.at(-1))} Hz`;
+  $("preview-summary").textContent=`${name} · ${data.f.length} Frequenzpunkte · ${formatFrequency(data.f[0])} bis ${formatFrequency(data.f.at(-1))} Hz`;
   $("preview-plots").innerHTML=bode(data,null,null,true)+nyquist(data.real,data.imag.map(v=>-v),[],[],"preview-nyquist-plot");
   $("measurement-preview").hidden=false;
 }
@@ -226,7 +227,7 @@ async function run(example) {
     $("rows").innerHTML = result.fits.map(f => `<tr><td>${f.model}</td><td>${f.elements}</td><td>${Object.keys(f.parameters).length}</td><td>${f.rms.toFixed(3)} %</td><td>${(f.aicc-result.fits[0].aicc).toFixed(1)}</td><td>${f.limited ? "Parameter prüfen" : "Numerisch stabil"}</td></tr>`).join("");
     $("model").replaceChildren(...result.fits.map(f => new Option(f.model, f.model)));
     $("project").checked=false;
-    $("f-min").value=result.f[0];$("f-max").value=result.f.at(-1);
+    setFrequencyInputs("min",result.f[0]);setFrequencyInputs("max",result.f.at(-1));
     projectionBounds=null;
     show();
     $("results").hidden = false;
@@ -316,7 +317,7 @@ function show() {
       const min=projectionBounds[0],max=projectionBounds[1];
       const frequencies=[...new Set([...projectionGrid(min,max),...result.f])].sort((a,b)=>a-b);
       projection=predictCircuit(fit.topology,fit.parameters,frequencies);
-      $("projection-status").textContent=`Messbereich: ${formatQuantity(result.f[0])} bis ${formatQuantity(result.f.at(-1))} Hz · Modellkurve: ${formatQuantity(min)} bis ${formatQuantity(max)} Hz. Kein erneuter Fit.`;
+      $("projection-status").textContent=`Messbereich: ${formatFrequency(result.f[0])} bis ${formatFrequency(result.f.at(-1))} Hz · Modellkurve: ${formatFrequency(min)} bis ${formatFrequency(max)} Hz. Kein erneuter Fit.`;
     }catch(error){$("projection-status").textContent=error.message;}
   }else $("projection-status").textContent="Prognose ausgeschaltet. Es wird nur der gemessene Frequenzbereich angezeigt.";
   $("circuit").replaceChildren(drawCircuit(fit.topology, fit.parameters));
@@ -411,21 +412,38 @@ $("save-uebersicht").onclick = () => savePlot("uebersicht");
 $("run").onclick = () => run(false);
 $("demo").onclick = () => run(true);
 $("model").onchange = show;
+function setFrequencyInputs(bound,frequency) {
+  const {factor,exponent}=frequencyParts(frequency);
+  $("f-"+bound+"-factor").value=factor;
+  $("f-"+bound).value=exponent;
+}
+function readFrequencyInputs(bound) {
+  const factor=$("f-"+bound+"-factor").value,exponent=$("f-"+bound).value;
+  if(!factor.trim()||!exponent.trim())throw new Error("Bitte Vorfaktor und Exponent ausfüllen.");
+  return frequencyFromParts(Number(factor),Number(exponent));
+}
 function applyProjection() {
   if(!result)return;
   try {
-    const min=Number($("f-min").value),max=Number($("f-max").value);
+    let min=readFrequencyInputs("min"),max=readFrequencyInputs("max");
     projectionGrid(min,max);
-    if(min>result.f[0]||max<result.f.at(-1))throw new Error("Der Prognosebereich muss den gesamten Messbereich einschließen.");
+    if(min>result.f[0]*(1+1e-12)||max<result.f.at(-1)*(1-1e-12))throw new Error("Der Prognosebereich muss den gesamten Messbereich einschließen.");
+    min=Math.min(min,result.f[0]);max=Math.max(max,result.f.at(-1));
+    setFrequencyInputs("min",min);setFrequencyInputs("max",max);
     projectionBounds=[min,max];
     show();
   }catch(error){$("projection-status").textContent=error.message;}
 }
+for(const id of ["f-min","f-max","f-min-factor","f-max-factor"])$(id).onchange=()=>{$("project").checked=true;applyProjection();};
 $("project-apply").onclick=()=>{$("project").checked=true;applyProjection();};
 $("project").onchange=()=>{$("project").checked?applyProjection():show();};
-$("extend-low").onclick=()=>{$("f-min").value=Math.max(1e-12,Number($("f-min").value)/10);$("project").checked=true;applyProjection();};
-$("extend-high").onclick=()=>{$("f-max").value=Math.min(1e12,Number($("f-max").value)*10);$("project").checked=true;applyProjection();};
-$("project-reset").onclick=()=>{$("f-min").value=result.f[0];$("f-max").value=result.f.at(-1);$("project").checked=false;projectionBounds=null;show();};
+$("extend-low").onclick=()=>extendFrequency("min",.1);
+$("extend-high").onclick=()=>extendFrequency("max",10);
+function extendFrequency(bound,multiplier) {
+  try{setFrequencyInputs(bound,Math.max(1e-12,Math.min(1e12,readFrequencyInputs(bound)*multiplier)));$("project").checked=true;applyProjection();}
+  catch(error){$("projection-status").textContent=error.message;}
+}
+$("project-reset").onclick=()=>{setFrequencyInputs("min",result.f[0]);setFrequencyInputs("max",result.f.at(-1));$("project").checked=false;projectionBounds=null;show();};
 $("export-projection").onclick=()=>{
   if(!projection)return;
   const lines=projection.f.map((f,i)=>[f,projection.real[i],projection.imag[i],f<result.f[0]||f>result.f.at(-1)?"extrapolation":"measured_frequency_range"].join(","));

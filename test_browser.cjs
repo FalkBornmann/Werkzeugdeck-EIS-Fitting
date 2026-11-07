@@ -53,14 +53,20 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
     await page.locator('#demo').click();await fitted(page);
     const rms=await page.locator('#rows').innerText();
     await page.locator('#extend-low').click();await page.locator('#extend-high').click();
-    assert.equal(await page.locator('#f-min').inputValue(),'0.01');
-    assert.equal(await page.locator('#f-max').inputValue(),'1000000');
+    assert.equal(await page.locator('#f-min').inputValue(),'-2');
+    assert.equal(await page.locator('#f-min-factor').inputValue(),'1');
+    assert.equal(await page.locator('#f-max').inputValue(),'6');
+    await page.locator('#f-min').press('ArrowDown');await page.locator('#f-min').press('Tab');
+    assert.equal(await page.locator('#f-min').inputValue(),'-3');
+    await page.locator('#project-apply').click();
+    assert.match(await page.locator('#projection-status').innerText(),/Messbereich: 10⁻¹ bis 10⁵ Hz · Modellkurve: 10⁻³ bis 10⁶ Hz/);
     assert.equal(await page.locator('#rows').innerText(),rms);
     assert.equal(await page.locator('#bode-plot rect').count(),2);
     assert.equal(await page.locator('#bode-plot polyline[stroke-dasharray]').count(),4);
-    await page.locator('#f-min').fill('0');await page.locator('#project-apply').click();
-    assert.match(await page.locator('#projection-status').innerText(),/positive Grenzen/);
-    await page.locator('#f-min').fill('0.001');await page.locator('#project-apply').click();
+    await page.locator('#f-min-factor').fill('0');await page.locator('#project-apply').click();
+    assert.match(await page.locator('#projection-status').innerText(),/positiven Vorfaktor/);
+    await page.locator('#f-min-factor').fill('2.5');await page.locator('#project-apply').click();
+    assert.match(await page.locator('#projection-status').innerText(),/2,5 × 10⁻³/);
     const csvPromise=page.waitForEvent('download');await page.locator('#export-projection').click();const csv=await csvPromise;
     assert.match(await fs.readFile(await csv.path(),'utf8'),/extrapolation/);
     for(const id of ['save-bode','save-nyquist','save-schaltbild','save-uebersicht']){
@@ -68,6 +74,8 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
     }
     await page.locator('#results').screenshot({path:path.join(root,'.test-artifacts','results.png')});
     await page.locator('#project-reset').click();assert.equal(await page.locator('#bode-plot rect').count(),0);
+    assert.equal(await page.locator('#f-min').inputValue(),'-1');
+    assert.equal(await page.locator('#f-max').inputValue(),'5');
     await upload('coating','other.csv');
     assert.match(await page.locator('#preview-summary').innerText(),/other.csv/);
     assert.equal(await page.locator('#results').isVisible(),false);

@@ -47,4 +47,26 @@ function projectionGrid(min,max) {
     throw new Error("Bitte positive Grenzen von 10⁻¹² bis 10¹² Hz mit Minimum < Maximum eingeben.");
   return Array.from({length:401},(_,i)=>i===0?min:i===400?max:10**(Math.log10(min)+(Math.log10(max)-Math.log10(min))*i/400));
 }
-if (typeof module!=="undefined") module.exports={predictCircuit,projectionGrid};
+function frequencyParts(frequency) {
+  let exponent=Math.floor(Math.log10(frequency));
+  let factor=frequency/10**exponent;
+  // Avoid displaying 9.999999999999998 × 10ⁿ for an exact decade.
+  if(Math.abs(factor-10)<1e-12){factor=1;exponent++;}
+  if(Math.abs(factor-1)<1e-12)factor=1;
+  return {factor,exponent};
+}
+function frequencyFromParts(factor,exponent) {
+  if(!Number.isFinite(factor)||factor<=0||!Number.isInteger(exponent)||exponent < -12||exponent > 12)
+    throw new Error("Bitte einen positiven Vorfaktor und einen ganzzahligen Exponenten von −12 bis 12 eingeben.");
+  const frequency=factor*10**exponent;
+  if(frequency<1e-12||frequency>1e12)throw new Error("Frequenzen müssen zwischen 10⁻¹² und 10¹² Hz liegen.");
+  return frequency;
+}
+function formatFrequency(frequency) {
+  let {factor,exponent}=frequencyParts(frequency);
+  factor=Number(factor.toPrecision(4));
+  if(factor===10){factor=1;exponent++;}
+  const superscript=String(exponent).replace(/[-0-9]/g,d=>"⁻⁰¹²³⁴⁵⁶⁷⁸⁹"["-0123456789".indexOf(d)]);
+  return (factor===1?"":factor.toLocaleString("de-DE",{maximumSignificantDigits:4})+" × ")+"10"+superscript;
+}
+if (typeof module!=="undefined") module.exports={predictCircuit,projectionGrid,frequencyParts,frequencyFromParts,formatFrequency};
