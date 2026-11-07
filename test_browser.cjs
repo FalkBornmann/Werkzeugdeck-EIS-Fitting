@@ -20,7 +20,16 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
     const page=await context.newPage(),errors=[];
     page.on('pageerror',e=>errors.push(e.message));
     await page.goto('http://127.0.0.1:8876/');
+    const examples=JSON.parse(await fs.readFile(path.join(root,'examples.json'),'utf8'));
+    const upload=async(key,name='measurement.csv')=>{const e=examples[key];await page.locator('#file').setInputFiles({name,mimeType:'text/csv',buffer:Buffer.from('frequency_Hz,Zreal_ohm,Zimag_ohm\n'+e.f.map((f,i)=>[f,e.real[i],e.imag[i]].join(',')).join('\n'))});await page.locator('#measurement-preview').waitFor({state:'visible'});};
+    await upload('rc');
+    assert.equal(await page.locator('#preview-bode-plot circle').count(),100);
+    assert.equal(await page.locator('#preview-nyquist-plot circle').count(),50);
+    assert.equal(await page.locator('#measurement-preview polyline').count(),0);
+    assert.equal(await page.locator('#results').isVisible(),false);
+    assert.ok(await page.locator('#run').isEnabled());
     await page.locator('#fit-mode').selectOption('graph');
+    assert.equal(await page.locator('#measurement-preview').isVisible(),true);
     assert.equal(await page.locator('#graph-controls').isVisible(),true);
     // A real HTML5 palette drop creates a component; reset/undo retain the graph.
     await page.getByRole('button',{name:'R · Widerstand',exact:true}).dragTo(page.locator('.graph-board'),{targetPosition:{x:320,y:280}});
@@ -59,9 +68,25 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
     }
     await page.locator('#results').screenshot({path:path.join(root,'.test-artifacts','results.png')});
     await page.locator('#project-reset').click();assert.equal(await page.locator('#bode-plot rect').count(),0);
+    await upload('coating','other.csv');
+    assert.match(await page.locator('#preview-summary').innerText(),/other.csv/);
+    assert.equal(await page.locator('#results').isVisible(),false);
+    await page.locator('#file').setInputFiles({name:'broken.csv',mimeType:'text/csv',buffer:Buffer.from('not a spectrum')});
+    await page.waitForFunction(()=>document.getElementById('status').textContent.includes('nicht gelesen'));
+    assert.equal(await page.locator('#measurement-preview').isVisible(),false);
+    assert.equal(await page.locator('#run').isEnabled(),false);
+    await upload('rc');await page.locator('#run').click();await fitted(page);
     await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     console.log('PASS: graphical drop, movement, manual wiring, validation, fit, projection, CSV/4 PNG exports and mobile width (local Python).');
     await page.goto('http://127.0.0.1:8877/');
+    const requests=[];page.on('request',r=>requests.push(r.url()));
+    await upload('rc');
+    await page.locator('#example-preview').click();
+    await page.waitForFunction(()=>document.getElementById('preview-summary').textContent.includes('gr4_4_3'));
+    assert.equal(requests.some(url=>url.includes('fit-worker')||url.includes('pyodide')||url.endsWith('/fit')),false);
+    assert.equal(await page.locator('#results').isVisible(),false);
+    await page.locator('#measurement-preview').screenshot({path:path.join(root,'.test-artifacts','measurement-preview.png')});
+    console.log('PASS: uploaded CSV preview and examples before fitting, no worker/library downloads; model editing retains preview, file changes clear fits, invalid files clear preview and disable fitting.');
     for(const key of ['rc','coating']){
       await page.locator('#example').selectOption(key);await page.locator('#demo').click();await fitted(page);
       assert.match(await page.locator('#status').innerText(),/50 Frequenzpunkte/);

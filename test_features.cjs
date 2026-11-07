@@ -2,6 +2,24 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {graphTopology}=require('./graph-editor.js');
 const {predictCircuit,projectionGrid}=require('./projection.js');
+const {parseSpectrum}=require('./spectrum-preview.js');
+const raw=text=>new TextEncoder().encode(text).buffer;
+test('CSV preview handles quoted reordered columns, BOM, CRLF and descending frequencies',()=>{
+  const data=parseSpectrum(raw('\ufeffextra,Zimag_ohm,frequency_Hz,Zreal_ohm\r\n'+Array.from({length:8},(_,i)=>`"a,b",-2,"${8-i}",1`).join('\r\n')),'.csv');
+  assert.deepEqual(data.f,[1,2,3,4,5,6,7,8]);assert.ok(data.imag.every(v=>v===-2));
+});
+test('preview rejects invalid files instead of drawing incomplete or stale points',()=>{
+  const csv=rows=>'frequency_Hz,Zreal_ohm,Zimag_ohm\n'+rows.join('\n');
+  for(const rows of [Array(8).fill('1,1,-2'),Array.from({length:8},(_,i)=>`${i},1,-2`),Array.from({length:8},(_,i)=>`${i+1},,-2`),Array.from({length:8},(_,i)=>`${i+1},nan,-2`),Array(7).fill('1,1,-2')]) assert.throws(()=>parseSpectrum(raw(csv(rows)),'.csv'));
+  assert.throws(()=>parseSpectrum(new ArrayBuffer(2000001),'.csv'),/groß/);
+  assert.throws(()=>parseSpectrum(new ArrayBuffer(20),'.ism'),/ISM/);
+  assert.throws(()=>parseSpectrum(raw('anything'),'.txt'),/ISM- oder CSV/);
+});
+test('ISM preview preserves signed phase and sorts the spectrum',()=>{
+  const n=8,buffer=new ArrayBuffer(12+34*n),v=new DataView(buffer);new Uint8Array(buffer).set([0,0,255,255,255,254]);v.setUint8(11,n-1);
+  for(let i=0;i<n;i++){v.setFloat64(12+8*i,n-i);v.setFloat64(12+8*(n+i),10);v.setFloat64(12+8*(2*n+i),-Math.PI/2);}
+  const data=parseSpectrum(buffer,'.ism');assert.deepEqual(data.f,[1,2,3,4,5,6,7,8]);assert.ok(data.imag.every(z=>Math.abs(z+10)<1e-10));assert.throws(()=>parseSpectrum(buffer.slice(0,-1),'.ism'),/ISM/);
+});
 const part=(id,kind='R')=>({id,kind});
 test('manual wiring recognizes nested series/parallel independent of coordinates',()=>{
   const tree=graphTopology([part('r'),part('rp'),part('c','C')],[['A','r:0'],['r:1','rp:0'],['r:1','c:0'],['rp:1','B'],['c:1','B']]);

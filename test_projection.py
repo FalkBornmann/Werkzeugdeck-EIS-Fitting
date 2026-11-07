@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import base64
+import struct
 import unittest
 import numpy as np
 from circuits import ELEMENTS, compile_circuit, search
@@ -11,6 +13,20 @@ from fitting import load_spectrum
 ROOT=Path(__file__).resolve().parent
 
 class ProjectionTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node.js required for preview parity test')
+    def test_preview_matches_python_import_for_both_example_spectra(self):
+        for item in json.loads((ROOT/'examples.json').read_text(encoding='utf-8')).values():
+            f=np.array(item['f']);z=np.array(item['real'])+1j*np.array(item['imag']);n=len(f)
+            ism=bytes.fromhex('0000fffffffe')+(n-1).to_bytes(6,'big')+struct.pack('>'+str(3*n)+'d',*f[::-1],*abs(z[::-1]),*np.angle(z[::-1]))+bytes(10*n)
+            csv=('frequency_Hz,Zreal_ohm,Zimag_ohm\n'+'\n'.join(','.join(map(str,row)) for row in zip(f,z.real,z.imag))).encode()
+            for suffix,raw in [('.ism',ism),('.csv',csv)]:
+                with self.subTest(example=item['name'],suffix=suffix):
+                    expected_f,expected_z=load_spectrum(raw,suffix)
+                    script="const {parseSpectrum}=require('./spectrum-preview.js');let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const c=JSON.parse(s),b=Buffer.from(c.raw,'base64');console.log(JSON.stringify(parseSpectrum(b.buffer.slice(b.byteOffset,b.byteOffset+b.length),c.suffix)));});"
+                    got=json.loads(subprocess.run(['node','-e',script],input=json.dumps({'raw':base64.b64encode(raw).decode(),'suffix':suffix}),text=True,cwd=ROOT,capture_output=True,check=True).stdout)
+                    np.testing.assert_array_equal(got['f'],expected_f)
+                    np.testing.assert_allclose(np.array(got['real'])+1j*np.array(got['imag']),expected_z,rtol=2e-12)
+
     @unittest.skipUnless(shutil.which('node'), 'Node.js required for cross-runtime test')
     def test_javascript_matches_python_for_all_elements_and_nested_model(self):
         f=np.geomspace(1e-12,1e12,101)

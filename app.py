@@ -25,6 +25,7 @@ class Handler(BaseHTTPRequestHandler):
             "/fitting.py": ("fitting.py", "text/plain; charset=utf-8"),
             "/circuits.py": ("circuits.py", "text/plain; charset=utf-8"),
             "/projection.js": ("projection.js", "text/javascript; charset=utf-8"),
+            "/spectrum-preview.js": ("spectrum-preview.js", "text/javascript; charset=utf-8"),
             "/graph-editor.js": ("graph-editor.js", "text/javascript; charset=utf-8"),
             "/examples.json": ("examples.json", "application/json; charset=utf-8"),
         }
