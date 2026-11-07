@@ -90,7 +90,7 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
     const requests=[];page.on('request',r=>requests.push(r.url()));
     await upload('rc');
     await page.locator('#example-preview').click();
-    await page.waitForFunction(()=>document.getElementById('preview-summary').textContent.includes('gr4_4_3'));
+    await page.waitForFunction(()=>document.getElementById('preview-summary').textContent.includes('Dreierschaltbild'));
     assert.equal(requests.some(url=>url.includes('fit-worker')||url.includes('pyodide')||url.endsWith('/fit')),false);
     assert.equal(await page.locator('#results').isVisible(),false);
     await page.locator('#measurement-preview').screenshot({path:path.join(root,'.test-artifacts','measurement-preview.png')});

@@ -1,6 +1,6 @@
 {
   "rc": {
-    "name": "gr4_4_3 _r1_10_r2_1k_100uf",
+    "name": "Dreierschaltbild",
     "f": [
       0.1,
       0.17783000000000002,
@@ -159,7 +159,7 @@
     ]
   },
   "coating": {
-    "name": "gr4_4_4_cc_10uf_cdl_100uf",
+    "name": "Fünferschaltbild",
     "f": [
       0.1,
       0.17783000000000002,
