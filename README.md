@@ -1,6 +1,6 @@
 # EIS-Fitting
 
-**[App im Werkzeugdeck öffnen](https://werkzeugdeck.pages.dev/Elektrochemie/Datenauswertung/EIS-Fitting/)** · Keine Installation für die Onlineversion nötig.
+**[App im Werkzeugdeck öffnen](https://werkzeugdeck.pages.dev/tools/eis-fitting/)** · Keine Installation für die Onlineversion nötig.
 
 EIS-Spektren aus Zahner-ISM oder CSV fitten und passende Ersatzschaltbilder vergleichen. Messdateien bleiben auf dem eigenen Rechner.
 
@@ -39,3 +39,8 @@ Mit installiertem Playwright: `node test_browser.cjs`. Der Test startet lokale P
 ## Theorie und Bedienoberfläche
 
 Die Oberfläche folgt KeksUndTee: dunkelgrüner Kopfbereich, sandfarbene Akzente und helle Karten mit responsiven Eingaben. Eine sichtbare Einführung erklärt die Grundlagen; die ausführliche Theorie lässt sich mit Herleitungen, Rechenverfahren, Grenzen und Fachquellen aufklappen. Nutzungshinweise erläutern KI-Unterstützung, Messdatenverarbeitung, Exporte, Hosting und Haftung.
+
+
+## Werkzeugdeck-Katalog
+Dieses Repository enthält ausschließlich das Tool. Fachgebiete, Navigation, veröffentlichter Versionsstand und gemeinsame Auslieferung werden im [Werkzeugdeck-Katalog](https://github.com/FalkBornmann/Werkzeugdeck) gepflegt.
+Online: https://werkzeugdeck.pages.dev/tools/eis-fitting/
