@@ -10,5 +10,5 @@ html = (source / "index.html").read_text(encoding="utf-8")
 if not re.search(r'<meta\b[^>]*name=["\']eis-runtime["\']', html, re.IGNORECASE):
     html = html.replace("<title>", '<meta name="eis-runtime" content="browser">\n<title>', 1)
 (target / "index.html").write_text(html, encoding="utf-8")
-for name in ("fit-worker.js", "circuit-diagram.js", "circuit-editor.js", "fitting.py", "circuits.py"):
+for name in ("fit-worker.js", "circuit-diagram.js", "circuit-editor.js", "graph-editor.js", "projection.js", "examples.json", "fitting.py", "circuits.py"):
     copyfile(source / name, target / name)

@@ -5,3 +5,4 @@ werkzeugdeck-dist/
 Werkzeugdeck-Pages.zip
 *.ism
 *.csv
+.test-artifacts/

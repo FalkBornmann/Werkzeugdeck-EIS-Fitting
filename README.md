@@ -4,9 +4,10 @@
 
 EIS-Spektren aus Zahner-ISM oder CSV fitten und passende Ersatzschaltbilder vergleichen. Messdateien bleiben auf dem eigenen Rechner.
 
-1. **Beispiel fitten** wählen oder eine Messdatei laden.
-2. Bauteiltypen für die automatische Suche auswählen oder unter **Eigenes Schaltbild** eine feste Schaltung aufbauen.
+1. Eines der beiden **Messbeispiele fitten** oder eine eigene Messdatei laden. Die Beispiele enthalten jeweils 50 originale Frequenz-/Impedanzwerte von 0,1 Hz bis 100 kHz aus den bereitgestellten ISM-Dateien. Nur diese Messwerte sind eingebunden, keine weiteren ISM-Metadaten. Die Nennwerte in den Namen sind keine garantierten Fitwerte. Beide Beispiele lassen sich als CSV herunterladen.
+2. Bauteiltypen für die automatische Suche auswählen oder unter **Eigenes Schaltbild** eine feste Schaltung aufbauen: im strukturierten Editor oder zusätzlich grafisch per Drag-and-drop. Im grafischen Editor Bauteile auf die Fläche ziehen oder anklicken und je zwei Anschlüsse anklicken, um eine Leitung zu zeichnen. Mehrere Leitungen am selben Anschluss bilden einen Knoten; reine Kreuzungen verbinden nicht. Tab/Enter verbinden Anschlüsse, Pfeiltasten verschieben ein fokussiertes Bauteil. Rückgängig, Löschen einzelner Leitungen und eine RC-Vorlage helfen beim Aufbau. Beide Editoren behalten eigene Entwürfe. Unterstützt werden Reihen-/Parallelnetze bis zwölf Bauteile; offene, kurzgeschlossene oder nicht reduzierbare Brückennetze werden vor dem Fit abgewiesen.
 3. Fit auswählen, Schaltbild mit Bauteilwerten, Bode- und Nyquist-Diagramm ansehen oder den Fit als CSV speichern.
+4. Optional die **Frequenzprognose** aktivieren und untere/obere Frequenz direkt eingeben oder mit **Unten ÷ 10 / Oben × 10** erweitern. Die Grenzen müssen den ganzen Messbereich einschließen und zwischen 10⁻¹² und 10¹² Hz liegen. Das Modell wird mit unveränderten Fitparametern ausgewertet. Sandfarbene Flächen und gestrichelte Kurven kennzeichnen Extrapolationen; Punkte bleiben ausschließlich Messwerte. RMS, AICc und Nyquist bleiben auf die Messung bezogen. Ein eigener Modell-CSV-Export markiert jede Zeile als `extrapolation` oder `measured_frequency_range`. PNG-Exporte enthalten die sichtbare Prognose samt Kennzeichnung. Die Prognose ist modellabhängig und enthält kein Konfidenzband; daraus folgt keine Bestätigung physikalischer Prozesse außerhalb der Messung.
 
 <details>
 <summary>Dateiformat und Fitmethode</summary>
@@ -29,7 +30,9 @@ python app.py --open
 
 Unter Windows kann nach der Installation auch `Start-EIS-Fitting.cmd` verwendet werden. `python build_web.py` erstellt die Einzel-App unter `dist/` . Der Browser lädt Pyodide und SciPy beim ersten Fit. Der Fit läuft in einem Web Worker.
 
-Tests: `python -m unittest discover -v`.
+Tests: `python -m unittest discover -v` und `node --test test_features.cjs`. Die Python-Tests prüfen zusätzlich beide Messbeispiele und die Übereinstimmung der JavaScript-Prognose mit dem Python-Rechenkern für alle Bauteiltypen.
+
+Mit installiertem Playwright: `node test_browser.cjs`. Der Test startet lokale Python- und Static-Server sowie einen isolierten Headless-Browser ohne Benutzerprofil und prüft beide Rechenwege, Drag-and-drop, Anschlussverdrahtung, Verschieben, Prognose, Modellwechsel, CSV-/PNG-Exporte und die mobile Breite. `EIS_PYTHON` und `EIS_BROWSER` können die Python- und Browserprogramme vorgeben. Standardmäßig wird `.venv/Scripts/python.exe` und der Playwright-Chromium verwendet.
 
 </details>
 

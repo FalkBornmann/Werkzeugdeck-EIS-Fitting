@@ -10,7 +10,7 @@ class WebBuildTests(unittest.TestCase):
         subprocess.run([sys.executable, str(source / "build_web.py")], check=True)
         html = (source / "dist/index.html").read_text(encoding="utf-8")
         self.assertRegex(html, r'<meta name="eis-runtime" content="browser">')
-        for name in ("fit-worker.js", "circuit-diagram.js", "circuit-editor.js", "fitting.py", "circuits.py"):
+        for name in ("fit-worker.js", "circuit-diagram.js", "circuit-editor.js", "graph-editor.js", "projection.js", "examples.json", "fitting.py", "circuits.py"):
             self.assertTrue((source / "dist" / name).is_file(), name)
 
 if __name__ == "__main__":

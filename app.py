@@ -24,6 +24,9 @@ class Handler(BaseHTTPRequestHandler):
             "/circuit-editor.js": ("circuit-editor.js", "text/javascript; charset=utf-8"),
             "/fitting.py": ("fitting.py", "text/plain; charset=utf-8"),
             "/circuits.py": ("circuits.py", "text/plain; charset=utf-8"),
+            "/projection.js": ("projection.js", "text/javascript; charset=utf-8"),
+            "/graph-editor.js": ("graph-editor.js", "text/javascript; charset=utf-8"),
+            "/examples.json": ("examples.json", "application/json; charset=utf-8"),
         }
         if self.path not in assets:
             self.send_error(404)
