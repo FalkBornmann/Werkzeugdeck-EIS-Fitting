@@ -47,3 +47,7 @@ Online: https://werkzeugdeck.pages.dev/tools/eis-fitting/
 
 ## Grafikexport
 Die erzeugten Diagramme und Grafiken lassen sich als PNG und als echte SVG-Vektorgrafik speichern. SVG enthält skalierbare Linien, Flächen und Text. Beide Formate übernehmen den gewählten Darstellungszustand; Exporte entstehen lokal im Browser.
+
+## Fachtheorie und einheitliche Bedienung
+[Fachtheorie öffnen](https://werkzeugdeck.pages.dev/bereiche/elektrochemie/theorie/) · [Design- und Exportvorgaben](https://github.com/FalkBornmann/Werkzeugdeck/blob/main/docs/DESIGN.md)
+Das gemeinsame Exportmenü bietet Darstellung, Dateityp und Speichern. PNG ist vorausgewählt; SVG enthält skalierbare Vektoren und Text.

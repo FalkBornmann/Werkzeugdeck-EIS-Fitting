@@ -19,6 +19,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         assets = {
             "/": ("index.html", "text/html; charset=utf-8"),
+            "/export-menu.js": ("export-menu.js", "text/javascript; charset=utf-8"),
+            "/tool-theme.css": ("tool-theme.css", "text/css; charset=utf-8"),
             "/fit-worker.js": ("fit-worker.js", "text/javascript; charset=utf-8"),
             "/circuit-diagram.js": ("circuit-diagram.js", "text/javascript; charset=utf-8"),
             "/circuit-editor.js": ("circuit-editor.js", "text/javascript; charset=utf-8"),
