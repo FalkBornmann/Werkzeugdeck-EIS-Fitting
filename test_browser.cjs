@@ -16,7 +16,7 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
   try{
     await Promise.all([ready('http://127.0.0.1:8876/'),ready('http://127.0.0.1:8877/')]);
     browser=await chromium.launch({headless:true,...(process.env.EIS_BROWSER?{executablePath:process.env.EIS_BROWSER}:{})});
-    const context=await browser.newContext({acceptDownloads:true,viewport:{width:1440,height:1000}});
+    const context=await browser.newContext({acceptDownloads:true,hasTouch:true,viewport:{width:1440,height:1000}});
     const page=await context.newPage(),errors=[];
     page.on('pageerror',e=>errors.push(e.message));
     await page.goto('http://127.0.0.1:8876/');
@@ -69,8 +69,11 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
     assert.match(await page.locator('#projection-status').innerText(),/2,5 × 10⁻³/);
     const csvPromise=page.waitForEvent('download');await page.locator('#export-projection').click();const csv=await csvPromise;
     assert.match(await fs.readFile(await csv.path(),'utf8'),/extrapolation/);
-    for(const id of ['save-bode','save-nyquist','save-schaltbild','save-uebersicht']){
-      const pending=page.waitForEvent('download');await page.locator('#'+id).click();const d=await pending,buf=await fs.readFile(await d.path());assert.equal(buf.subarray(1,4).toString(),'PNG');assert.ok(buf.length>3000);
+    for(const object of ['bode','nyquist','schaltbild','uebersicht'])for(const format of ['png','svg']){
+      await page.locator('[data-export-object]').selectOption(object);await page.locator('[data-export-format]').selectOption(format);
+      const pending=page.waitForEvent('download');await page.locator('[data-export-save]').click();const d=await pending,buf=await fs.readFile(await d.path());
+      if(format==='png'){assert.equal(buf.subarray(1,4).toString(),'PNG');assert.ok(buf.length>3000);}
+      else{assert.match(buf.toString(),/<svg/);assert.doesNotMatch(buf.toString(),/<image\b|data:image/);}
     }
     await page.locator('#results').screenshot({path:path.join(root,'.test-artifacts','results.png')});
     await page.locator('#project-reset').click();assert.equal(await page.locator('#bode-plot rect').count(),0);
@@ -101,9 +104,35 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
       console.log('PASS: actual Pyodide Web Worker fits real example '+key+' ('+(await page.locator('#rows tr').first().innerText())+').');
     }
     await page.locator('#extend-low').click();await page.locator('#extend-high').click();
-    await page.locator('#model').selectOption({index:1});
+    const rows=page.locator('#rows tr');
+    assert.equal(await page.locator('#model').count(),0);
+    assert.equal(await page.locator('#rows .model-diagram svg').count(),await rows.count());
+    assert.equal(await page.locator('#rows .model-select[aria-pressed=true]').count(),1);
+    const second=rows.nth(1),expectedPaths=await second.locator('svg path').evaluateAll(paths=>paths.map(p=>p.getAttribute('d')));
+    await second.locator('.model-select').focus();await page.keyboard.press('Enter');
+    assert.equal(await second.locator('.model-select').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.locator('#rows .model-select[aria-pressed=true]').count(),1);
+    assert.match(await page.locator('#fit-detail').innerText(),/Modell 2/);
+    assert.equal(await page.locator('#fit-detail').evaluate(e=>document.activeElement===e),true);
+    assert.deepEqual(await page.locator('#circuit svg path').evaluateAll(paths=>paths.map(p=>p.getAttribute('d'))),expectedPaths);
     assert.match(await page.locator('#projection-status').innerText(),/Kein erneuter Fit/);
+    const modelCsvPromise=page.waitForEvent('download');await page.locator('#export').click();
+    const modelCsv=await fs.readFile(await (await modelCsvPromise).path(),'utf8');
+    const exported=modelCsv.trim().split('\n')[1].split(',').map(Number);
+    const expected=await page.evaluate(()=>({real:selected().real[0],imag:selected().imag[0]}));
+    assert.equal(exported[3],expected.real);assert.equal(exported[4],expected.imag);
+    await page.locator('#back-to-comparison').click();
+    assert.equal(await second.locator('.model-select').evaluate(e=>document.activeElement===e),true);
+    await page.setViewportSize({width:1440,height:1000});
+    assert.ok(await page.locator('.model-diagram').evaluateAll(items=>items.every(e=>e.scrollWidth<=e.clientWidth+1)));
+    await page.locator('.table-scroll').screenshot({path:path.join(root,'.test-artifacts','model-comparison-desktop.png')});
+    await page.setViewportSize({width:390,height:844});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    assert.ok(await page.locator('.model-diagram').evaluateAll(items=>items.every(e=>e.scrollWidth<=e.clientWidth+1)));
+    await page.locator('.table-scroll').screenshot({path:path.join(root,'.test-artifacts','model-comparison-mobile.png')});
+    await rows.nth(0).locator('.model-select').tap();
+    assert.match(await page.locator('#fit-detail').innerText(),/Modell 1/);
     assert.deepEqual(errors,[]);
-    console.log('PASS: model switching recomputes projection; no browser errors.');
+    console.log('PASS: graphical table, keyboard/touch model selection, single active row, matching detail circuit/CSV, return focus, projection and mobile overflow; no browser errors.');
   } finally {if(browser)await browser.close();api.kill();web.kill();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

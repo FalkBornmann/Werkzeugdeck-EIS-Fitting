@@ -9,6 +9,7 @@
 main{max-width:1180px;margin:auto;padding:28px}section{background:white;border:1px solid var(--line);border-radius:12px;padding:24px;margin-bottom:20px;min-width:0}h1{font-size:clamp(40px,6vw,76px);overflow-wrap:anywhere}.row,.actions{display:flex;flex-wrap:wrap;gap:14px;align-items:end;margin:16px 0}.row>label{flex:1 1 160px;min-width:0;max-width:100%}input,select{max-width:100%;min-width:0}input[type=file],input[type=number]{width:100%}input[type=checkbox]{accent-color:var(--teal);width:19px;height:19px}small,#status{color:#536e79;font-size:13px}fieldset{min-width:0;border:1px solid var(--line);border-radius:8px;padding:16px;margin:16px 0}.component-options label{flex-direction:row;align-items:center}.plots{display:flex;gap:14px;flex-wrap:wrap}.plots figure{flex:1 1 420px;margin:0;min-width:0}.plots svg{width:100%;height:auto}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%}td,th{text-align:left;border-bottom:1px solid var(--line);padding:10px;font-size:14px}.editor-branch{padding:9px 0}.editor-children{border-left:2px solid #cbdade;margin:8px 0 0 8px;padding-left:12px}.editor-action{background:#edf4f4;color:#183747;font-size:13px;padding:6px 9px}.editor-branch .actions{gap:6px}output{display:block;margin:16px 0;font-weight:650}.theory li{margin:12px 0}code{overflow-wrap:anywhere}[hidden]{display:none!important}@media(max-width:760px){main{padding:18px}section{padding:18px}.actions{align-items:stretch}td,th{padding:7px}#results>.actions{align-items:flex-start;flex-direction:column}.subtitle{font-size:22px}}
 .graph-scroll{overflow:auto;border:1px solid var(--line);border-radius:8px}.graph-board{width:940px;height:410px;position:relative;background-color:#f8faf7;background-image:radial-gradient(#cbdade 1px,transparent 1px);background-size:20px 20px}.graph-wires{position:absolute;width:940px;height:410px;pointer-events:none}.graph-part{position:absolute;width:110px;height:48px}.graph-handle{width:110px;height:48px;padding:0 4px;display:flex;align-items:center;cursor:grab;background:#f0e1c7;border:2px solid #285449;touch-action:none}.graph-pin{position:absolute;width:44px;height:44px;padding:0;border:0;background:transparent;color:#087f83;font-size:24px}.graph-pin[aria-pressed=true]{background:#e6c18c;border-radius:50%}.graph-remove{position:absolute;left:35px;top:48px;padding:0;min-height:28px;width:40px;font-size:17px}.graph-palette button{font-size:12px;padding:8px}.projection-note{color:#8a4b12}header{background:#183e35;border-bottom-color:#ddbd86}:root{--teal:#216a58}
 .frequency-field{flex:1 1 235px;min-width:0;font-size:13px;font-weight:650}.frequency-input{display:flex;align-items:center;gap:6px;margin-top:6px;white-space:nowrap}.frequency-input input:first-child{width:85px}.frequency-input input.frequency-exponent{width:85px;align-self:flex-start;position:relative;top:-8px;font-size:14px}.frequency-input>span{font-size:17px}.frequency-input input{min-height:44px}
+.model-table td{vertical-align:middle}.model-table td:first-child{padding:14px}.model-number{display:block;font-size:13px;color:var(--topic-dark,#163e50);margin-bottom:4px}.model-diagram{width:320px;max-width:100%;overflow:auto;margin:6px 0 10px;color:var(--topic-dark,#163e50);border-radius:6px;background:#fff}.model-diagram svg{display:block;max-width:100%;height:auto}.model-select{border-color:var(--topic-accent,#176b8b);color:var(--topic-dark,#163e50);min-width:165px}.model-select[aria-pressed=true]{background:var(--topic-dark,#163e50);border-color:var(--topic-dark,#163e50);color:white}.model-table .selected-model{background:#faf3e7}.model-table .selected-model td:first-child{box-shadow:inset 4px 0 var(--topic-sand,#dbac6b)}.model-table tbody tr:hover{background:var(--topic-light,#edf5fa)}.fit-detail-head{border-top:1px solid var(--line);padding-top:16px;margin-top:20px}#fit-detail{scroll-margin-top:20px}#fit-detail:focus{outline:3px solid #dbac6b;outline-offset:5px}#selection-status{font-size:14px;color:#536e79}.model-diagram:focus-visible{outline:3px solid #dbac6b;outline-offset:3px}@media(max-width:760px){.model-diagram{width:260px}.model-table td:first-child{padding:10px}}
 </style>
 <link rel="stylesheet" href="./tool-theme.css">
 </head>
@@ -49,13 +50,13 @@ main{max-width:1180px;margin:auto;padding:28px}section{background:white;border:1
 <p id="status" role="status">Zahner ISM oder CSV. Die Berechnung läuft auf diesem Rechner.</p>
 <details><summary>CSV-Format</summary><p>UTF-8, Komma als Trennzeichen, Dezimalpunkt. Spalten <code>frequency_Hz,Zreal_ohm,Zimag_ohm</code>. Kapazitive Impedanz hat einen negativen Imaginärteil.</p></details></section>
 <section id="results" hidden>
-<div class="section-head"><span class="number">02</span><h2>Modelle vergleichen</h2></div><div class="table-scroll" role="region" aria-label="Modellvergleich" tabindex="0"><table><thead><tr><th>Schaltung</th><th>Bauteile</th><th>Parameter</th><th>RMS</th><th>ΔAICc</th><th>Fitstatus</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="section-head" id="comparison-title"><span class="number">02</span><h2>Modelle vergleichen</h2></div><p id="comparison-help" class="hint">Wähle ein Ersatzschaltbild über „Fit anzeigen“, um seine Kennwerte und Diagramme unten zu sehen. Die Schaltbilder zeigen die Topologie ohne Bauteilwerte. Die aktive Zeile ist markiert. Auf kleinen Bildschirmen lässt sich die Tabelle seitlich verschieben.</p><div class="table-scroll" role="region" aria-label="Modellvergleich" aria-describedby="comparison-help" tabindex="0"><table class="model-table"><thead><tr><th scope="col">Ersatzschaltbild &amp; Auswahl</th><th scope="col">Bauteile</th><th scope="col">Parameter</th><th scope="col">RMS</th><th scope="col">ΔAICc</th><th scope="col">Fitstatus</th></tr></thead><tbody id="rows"></tbody></table></div>
 <p><small>Der komplexe RMS gewichtet jeden Frequenzpunkt relativ zu seinem Impedanzbetrag. ΔAICc berücksichtigt die Anzahl der Fitparameter. Der Modellvergleich ersetzt keine Prüfung der Messqualität.</small></p>
 <aside class="notice" aria-label="Aussagekraft des Fits">
 <strong>Was der Fit aussagt</strong>
 <p style="margin:4px 0">Ein kleiner Fitfehler zeigt, wie gut das Schaltbild die Messdaten beschreibt. Ob es die tatsächlichen Prozesse abbildet, musst du separat prüfen. Messrauschen, Drift und Messgrenzen des Geräts können den Fit verfälschen. Prüfe den nutzbaren Frequenz- und Impedanzbereich, auffällige Messpunkte und die Plausibilität der Bauteilwerte.</p>
 </aside>
-<div class="actions"><label>Fit anzeigen <select id="model"></select></label><button id="export">Fit als CSV exportieren</button></div>
+<div class="fit-detail-head"><h3 id="fit-detail" tabindex="-1">Ausgewählter Fit</h3><p id="selection-status" role="status"></p><div class="actions"><button id="back-to-comparison">Zurück zum Modellvergleich</button><button id="export">Fit als CSV exportieren</button></div></div>
 <p id="parameters"></p>
 <figure style="margin:16px 0"><h3>Ersatzschaltbild</h3><div id="circuit" style="overflow:auto;padding:12px;border:1px solid #d7e3ea;border-radius:8px"></div></figure>
 <div class="plots" id="plots"></div>
@@ -88,6 +89,7 @@ let worker;
 let exampleData;
 let projection;
 let projectionBounds;
+let selectedFitIndex=0;
 let previewVersion=0;
 let previewLoading=false;
 let previewFile=null;
@@ -227,8 +229,8 @@ async function run(example) {
     }
     if (!result.fits.length) throw new Error("Für diese Messpunkte wurde kein auswertbarer Fit gefunden.");
     fileStem = file.name.replace(/\.(ism|csv)$/i,"").replace(/[<>:"/\\|?*\u0000-\u001f]/g,"_").trim() || "EIS";
-    $("rows").innerHTML = result.fits.map(f => `<tr><td>${f.model}</td><td>${f.elements}</td><td>${Object.keys(f.parameters).length}</td><td>${f.rms.toFixed(3)} %</td><td>${(f.aicc-result.fits[0].aicc).toFixed(1)}</td><td>${f.limited ? "Parameter prüfen" : "Numerisch stabil"}</td></tr>`).join("");
-    $("model").replaceChildren(...result.fits.map(f => new Option(f.model, f.model)));
+    selectedFitIndex=0;
+    renderModelComparison();
     $("project").checked=false;
     setFrequencyInputs("min",result.f[0]);setFrequencyInputs("max",result.f.at(-1));
     projectionBounds=null;
@@ -311,9 +313,40 @@ function bode(measurement, fit, predicted=null, measurementOnly=false) {
   return `<figure><h3>Bode</h3><svg id="${measurementOnly?'preview-bode-plot':'bode-plot'}" viewBox="0 0 ${width} 282" role="img" aria-label="${measurementOnly?'Bode-Messwerte vor dem Fit: ':''}Bode-Diagramm mit Impedanzbetrag links und Phasenbetrag rechts" font-size="12">${axes}${trace(z,zfit,zy,teal,false)}${trace(angle,angleFit,py,blue,true)}
     ${text((left+right)/2,270,"Frequenz / Hz"+(predicted?" · Sand / gestrichelt: Prognose":""))}<text fill="${teal}" transform="translate(24 129) rotate(-90)" text-anchor="middle">|Z| / Ω</text><text fill="${blue}" transform="translate(679 129) rotate(90)" text-anchor="middle">|Phase| / °</text></svg></figure>`;
 }
-const selected = () => result.fits.find(f => f.model === $("model").value);
+const selected = () => result.fits[selectedFitIndex];
+function renderModelComparison() {
+  $("rows").replaceChildren(...result.fits.map((fit,index)=>{
+    const row=document.createElement("tr");row.dataset.fitIndex=index;
+    const cell=document.createElement("td");
+    const name=document.createElement("strong");name.className="model-number";name.textContent="Modell "+(index+1);
+    const diagram=document.createElement("div");diagram.className="model-diagram";diagram.tabIndex=0;
+    diagram.setAttribute("role","region");diagram.setAttribute("aria-label",`Schaltbild Modell ${index+1}: ${fit.model}`);
+    const svg=drawCircuit(fit.topology,{});
+    svg.setAttribute("aria-label",`Ersatzschaltbild Modell ${index+1}: ${fit.model}`);
+    svg.setAttribute("width",Math.min(320,Math.max(180,svg.viewBox.baseVal.width*.8)));
+    diagram.append(svg);
+    const button=document.createElement("button");button.type="button";button.className="model-select";
+    button.dataset.fitIndex=index;button.setAttribute("aria-controls","fit-detail plots circuit parameters");
+    button.onclick=()=>{selectedFitIndex=index;show();$("fit-detail").focus({preventScroll:true});$("fit-detail").scrollIntoView({block:"start",behavior:"auto"});};
+    cell.append(name,diagram,button);row.append(cell);
+    for(const value of [fit.elements,Object.keys(fit.parameters).length,fit.rms.toFixed(3)+" %",(fit.aicc-result.fits[0].aicc).toFixed(1),fit.limited?"Parameter prüfen":"Numerisch stabil"]){
+      const td=document.createElement("td");td.textContent=value;row.append(td);
+    }
+    return row;
+  }));
+}
 function show() {
   const fit = selected();
+  for(const row of $("rows").children){
+    const active=Number(row.dataset.fitIndex)===selectedFitIndex;
+    row.classList.toggle("selected-model",active);
+    const button=row.querySelector(".model-select");
+    button.setAttribute("aria-pressed",String(active));
+    button.setAttribute("aria-label",`Modell ${Number(row.dataset.fitIndex)+1}: Fit anzeigen${active?", ausgewählt":""}`);
+    button.textContent=active?"✓ Fit wird angezeigt":"Fit anzeigen";
+  }
+  $("fit-detail").textContent=`Modell ${selectedFitIndex+1} · Ausgewählter Fit`;
+  $("selection-status").textContent=`Modell ${selectedFitIndex+1} von ${result.fits.length} · RMS ${fit.rms.toFixed(3)} % · Diagramme und Exporte beziehen sich auf diese Auswahl.`;
   projection=null;
   if($("project").checked&&projectionBounds){
     try {
@@ -429,7 +462,10 @@ $("save-uebersicht").onclick = () => savePlot("uebersicht");
 $("save-uebersicht-svg").onclick = () => savePlot("uebersicht", "svg");
 $("run").onclick = () => run(false);
 $("demo").onclick = () => run(true);
-$("model").onchange = show;
+$("back-to-comparison").onclick=()=>{
+  const button=$("rows").querySelector(`.model-select[data-fit-index="${selectedFitIndex}"]`);
+  button?.focus({preventScroll:true});button?.scrollIntoView({block:"center",inline:"nearest",behavior:"auto"});
+};
 function setFrequencyInputs(bound,frequency) {
   const {factor,exponent}=frequencyParts(frequency);
   $("f-"+bound+"-factor").value=factor;

@@ -1,0 +1,8 @@
+{
+  "name": "werkzeugdeck-eis-fitting",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test test_features.cjs"
+  }
+}
