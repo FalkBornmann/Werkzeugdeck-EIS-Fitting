@@ -23,6 +23,7 @@ class Handler(BaseHTTPRequestHandler):
             "/tool-theme.css": ("tool-theme.css", "text/css; charset=utf-8"),
             "/fit-worker.js": ("fit-worker.js", "text/javascript; charset=utf-8"),
             "/circuit-diagram.js": ("circuit-diagram.js", "text/javascript; charset=utf-8"),
+            "/circuit-presets.js": ("circuit-presets.js", "text/javascript; charset=utf-8"),
             "/circuit-editor.js": ("circuit-editor.js", "text/javascript; charset=utf-8"),
             "/fitting.py": ("fitting.py", "text/plain; charset=utf-8"),
             "/circuits.py": ("circuits.py", "text/plain; charset=utf-8"),

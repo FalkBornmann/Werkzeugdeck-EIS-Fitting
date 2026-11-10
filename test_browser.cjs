@@ -22,6 +22,7 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
     await page.goto('http://127.0.0.1:8876/');
     const examples=JSON.parse(await fs.readFile(path.join(root,'examples.json'),'utf8'));
     const upload=async(key,name='measurement.csv')=>{const e=examples[key];await page.locator('#file').setInputFiles({name,mimeType:'text/csv',buffer:Buffer.from('frequency_Hz,Zreal_ohm,Zimag_ohm\n'+e.f.map((f,i)=>[f,e.real[i],e.imag[i]].join(',')).join('\n'))});await page.locator('#measurement-preview').waitFor({state:'visible'});};
+    if(!process.env.EIS_SELECTION_ONLY){
     await upload('rc');
     assert.equal(await page.locator('#preview-bode-plot circle').count(),100);
     assert.equal(await page.locator('#preview-nyquist-plot circle').count(),50);
@@ -132,6 +133,84 @@ async function fitted(page){await page.waitForFunction(()=>!document.getElementB
     await page.locator('.table-scroll').screenshot({path:path.join(root,'.test-artifacts','model-comparison-mobile.png')});
     await rows.nth(0).locator('.model-select').tap();
     assert.match(await page.locator('#fit-detail').innerText(),/Modell 1/);
+    }
+    // A known RC spectrum with one deliberate faulty point must recover the
+    // original parameters when that point is excluded, in both runtimes.
+    const frequencies=Array.from({length:40},(_,i)=>.1*10**(6*i/39));
+    const measurements=frequencies.map((f,i)=>{const q=2*Math.PI*f*.1;return [f,10+1000/(1+q*q)+(i===17?2000:0),-1000*q/(1+q*q)-(i===17?1000:0)];});
+    const faultyCsv='frequency_Hz,Zreal_ohm,Zimag_ohm\n'+measurements.map(p=>p.join(',')).join('\n');
+    for(const origin of ['http://127.0.0.1:8876/','http://127.0.0.1:8877/']){
+      await page.setViewportSize({width:1440,height:1000});await page.goto(origin);
+      await page.locator('#file').setInputFiles({name:'faulty-rc.csv',mimeType:'text/csv',buffer:Buffer.from(faultyCsv)});
+      await page.locator('#measurement-preview').waitFor({state:'visible'});
+      await page.locator('#fit-mode').selectOption('graph');await page.locator('#run').click();await fitted(page);
+      const rmsWithOutlier=await page.evaluate(()=>selected().rms);assert.ok(rmsWithOutlier>1);
+      await page.locator('#preview-nyquist-plot [data-point-index="17"]').click();
+      assert.equal(await page.locator('#results').isVisible(),false);
+      assert.match(await page.locator('#point-selection-status').innerText(),/39 von 40/);
+      assert.equal(await page.locator('#preview-bode-plot .excluded-point').count(),2);
+      await page.locator('#point-table-details summary').click();
+      const checkbox=page.locator('#point-rows input[data-point-index="17"]');
+      await checkbox.focus();await page.keyboard.press('Space');assert.equal(await checkbox.isChecked(),true);
+      await page.keyboard.press('Space');assert.equal(await checkbox.isChecked(),false);
+      await page.locator('#run').click();await fitted(page);
+      const info=await page.evaluate(()=>({n:result.f.length,indices:result.usedIndices,rms:selected().rms,parameters:selected().parameters}));
+      assert.equal(info.n,39);assert.ok(!info.indices.includes(17));assert.ok(info.rms<1e-5);
+      for(const [key,value] of Object.entries({'R1 R':10,'R2 R':1000,'C1 C':1e-4}))assert.ok(Math.abs(info.parameters[key]/value-1)<1e-5);
+      assert.equal(await page.locator('#bode-plot .excluded-point').count(),2);assert.equal(await page.locator('#nyquist-plot .excluded-point').count(),1);
+      const selectionCsvWait=page.waitForEvent('download');await page.locator('#export').click();
+      const selectionCsv=(await fs.readFile(await (await selectionCsvWait).path(),'utf8')).trim().split('\n');
+      assert.equal(selectionCsv.length,41);assert.match(selectionCsv[0],/included_in_fit/);
+      const omitted=selectionCsv[18].split(',');assert.equal(omitted[3],'');assert.equal(omitted[4],'');assert.equal(omitted[5],'0');
+      await page.locator('[data-export-object]').selectOption('uebersicht');await page.locator('[data-export-format]').selectOption('svg');
+      const svgWait=page.waitForEvent('download');await page.locator('[data-export-save]').click();
+      const selectionSvg=await fs.readFile(await (await svgWait).path(),'utf8');assert.match(selectionSvg,/39\/40 Punkte im Fit/);assert.match(selectionSvg,/excluded-point/);
+      await page.locator('#fit-mode').selectOption('auto');await page.locator('#limit').selectOption('3');await page.locator('#run').click();await fitted(page);
+      assert.ok(await page.evaluate(()=>result.f.length===39&&result.fits.every(f=>f.real.length===39)&&selected().rms<1e-5));
+      await page.locator('#measurement-preview').screenshot({path:path.join(root,'.test-artifacts','point-selection-'+(origin.includes('8876')?'python':'browser')+'.png')});
+      for(let i=0;i<33;i++)if(i!==17)await page.locator(`#point-rows input[data-point-index="${i}"]`).uncheck();
+      assert.equal(await page.locator('#run').isEnabled(),false);assert.equal(await page.locator('#results').isVisible(),false);
+      assert.match(await page.locator('#point-selection-status').innerText(),/7 von 40/);
+      await page.locator('#include-all').click();assert.match(await page.locator('#point-selection-status').innerText(),/40 von 40/);
+      assert.equal(await page.locator('#run').isEnabled(),true);
+      await page.locator('#point-rows input[data-point-index="17"]').uncheck();
+      await page.locator('#file').setInputFiles({name:'replacement.csv',mimeType:'text/csv',buffer:Buffer.from(faultyCsv)});
+      await page.waitForFunction(()=>document.getElementById('preview-summary').textContent.includes('replacement.csv'));
+      assert.match(await page.locator('#point-selection-status').innerText(),/40 von 40/);
+      console.log('PASS: point exclusion recovers known RC values, matches all model data, invalidates stale fits, survives mode changes, restores points, rejects <8 points and preserves CSV/SVG provenance ('+origin+').');
+    }
+    const {CIRCUIT_PRESETS}=require('./circuit-presets.js');
+    const normalize=node=>typeof node==='string'?node:JSON.stringify([node[0],...node.slice(1).flatMap(child=>Array.isArray(child)&&child[0]===node[0]?child.slice(1):[child]).map(normalize).sort()]);
+    if(!await page.locator('#point-table-details').evaluate(e=>e.open))await page.locator('#point-table-details summary').click();
+    await page.locator('#point-rows input[data-point-index="17"]').uncheck();
+    for(const mode of ['custom','graph']){
+      await page.locator('#fit-mode').selectOption(mode);
+      assert.equal(await page.locator('#preset-controls').isVisible(),true);
+      for(const preset of CIRCUIT_PRESETS){
+        await page.locator('#preset-category').selectOption(preset.category);await page.locator('#preset-model').selectOption(preset.id);await page.locator('#preset-apply').click();
+        const topology=await page.evaluate(()=>document.getElementById('fit-mode').value==='graph'?graph.topology():editor.topology());
+        assert.equal(normalize(topology),normalize(preset.tree),preset.id+' '+mode);
+        assert.ok(await page.locator('#preset-sources a').count());
+        assert.match(await page.locator('#point-selection-status').innerText(),/39 von 40/);
+      }
+    }
+    await page.locator('#preset-controls details summary').click();
+    const topologyWait=page.waitForEvent('download');await page.locator('#circuit-save').click();const topologyFile=await fs.readFile(await (await topologyWait).path(),'utf8');
+    const saved=JSON.parse(topologyFile);assert.equal(saved.format,'werkzeugdeck-eis-circuit');assert.deepEqual(Object.keys(saved).sort(),['format','topology','version']);
+    await page.locator('#circuit-load').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{"topology":"X"}')});
+    await page.waitForFunction(()=>document.getElementById('preset-status').textContent.includes('nicht geladen'));
+    const rcTopology=['s','R',['p','R','C']];
+    await page.locator('#circuit-load').setInputFiles({name:'saved-rc.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({format:'werkzeugdeck-eis-circuit',version:1,topology:rcTopology}))});
+    await page.waitForFunction(()=>document.getElementById('preset-status').textContent.includes('geladen und geprüft'));
+    assert.equal(normalize(await page.evaluate(()=>graph.topology())),normalize(rcTopology));
+    await page.locator('#run').click();await fitted(page);
+    assert.ok(await page.evaluate(()=>result.f.length===39&&selected().rms<1e-5));
+    assert.ok((await page.locator('#nyquist-plot polyline').getAttribute('points')).split(' ').length>=401);
+    await page.locator('#preset-controls').screenshot({path:path.join(root,'.test-artifacts','preset-library.png')});
+    await page.locator('#fit-to-editor').click();assert.equal(await page.locator('#results').isVisible(),false);
+    assert.equal(normalize(await page.evaluate(()=>graph.topology())),normalize(rcTopology));
+    await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    console.log('PASS: all 13 sourced presets in both editors, preserved exclusions, JSON export/import rejection and round-trip, fixed-topology fit, dense Nyquist curve and fit reuse.');
     assert.deepEqual(errors,[]);
     console.log('PASS: graphical table, keyboard/touch model selection, single active row, matching detail circuit/CSV, return focus, projection and mobile overflow; no browser errors.');
   } finally {if(browser)await browser.close();api.kill();web.kill();}

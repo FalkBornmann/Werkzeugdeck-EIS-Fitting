@@ -3,6 +3,31 @@ const assert=require('node:assert/strict');
 const {graphTopology}=require('./graph-editor.js');
 const {predictCircuit,projectionGrid}=require('./projection.js');
 const {parseSpectrum}=require('./spectrum-preview.js');
+const {selectSpectrumPoints}=require('./spectrum-preview.js');
+const {CIRCUIT_PRESETS,validateCircuitTopology,parseCircuitFile}=require('./circuit-presets.js');
+const {layoutCircuitGraph}=require('./graph-editor.js');
+const canonical=node=>typeof node==='string'?node:JSON.stringify([node[0],...node.slice(1).flatMap(child=>Array.isArray(child)&&child[0]===node[0]?child.slice(1):[child]).map(canonical).sort()]);
+test('every sourced preset loads as an equivalent editable series/parallel graph',()=>{
+  assert.equal(new Set(CIRCUIT_PRESETS.map(p=>p.id)).size,CIRCUIT_PRESETS.length);
+  assert.deepEqual([...new Set(CIRCUIT_PRESETS.map(p=>p.category))].sort(),['Batterie','Elektrochemie','Elektrotechnik','Korrosionsschutz']);
+  for(const preset of CIRCUIT_PRESETS){
+    const copy=validateCircuitTopology(preset.tree),layout=layoutCircuitGraph(copy);
+    assert.equal(canonical(graphTopology(layout.parts,layout.wires)),canonical(copy),preset.id);
+    assert.ok(preset.sources.length);
+    assert.ok(layout.parts.every(p=>p.x>=0&&p.y>=0&&p.x+110<=layout.boardWidth&&p.y+48<=layout.boardHeight));
+    assert.deepEqual(parseCircuitFile(JSON.stringify({format:'werkzeugdeck-eis-circuit',version:1,topology:copy})),copy);
+  }
+  for(const tree of [['s','R'],['x','R','C'],['s',...Array(13).fill('R')],'X'])assert.throws(()=>validateCircuitTopology(tree));
+  assert.throws(()=>parseCircuitFile('{"topology":"R"}'));
+});
+test('point exclusion preserves original data and requires eight remaining points',()=>{
+  const data={f:Array.from({length:10},(_,i)=>i+1),real:Array(10).fill(10),imag:Array(10).fill(-2)},before=JSON.stringify(data);
+  const selection=selectSpectrumPoints(data,new Set([0,5]));
+  assert.deepEqual(selection.indices,[1,2,3,4,6,7,8,9]);assert.deepEqual(selection.f,[2,3,4,5,7,8,9,10]);
+  assert.equal(JSON.stringify(data),before);
+  assert.throws(()=>selectSpectrumPoints(data,[0,1,2]),/acht/);
+  assert.throws(()=>selectSpectrumPoints(data,[-1]),/Ungültige/);
+});
 const {frequencyParts,frequencyFromParts,formatFrequency}=require('./projection.js');
 test('frequency fields preserve intermediate values and display every decade as a power',()=>{
   for(const f of [1e-12,.1,1,100,123.456,1e12]){const {factor,exponent}=frequencyParts(f);assert.ok(Math.abs(frequencyFromParts(factor,exponent)/f-1)<1e-12);}

@@ -42,4 +42,11 @@ function parseSpectrum(raw, suffix) {
   if(points.some(p=>p[0]<1e-12||p[0]>1e12||Math.hypot(p[1],p[2])<1e-12||Math.hypot(p[1],p[2])>1e18))throw new Error("Unterstützt werden 10⁻¹² bis 10¹² Hz und Impedanzbeträge von 10⁻¹² bis 10¹⁸ Ω.");
   return {f:points.map(p=>p[0]),real:points.map(p=>p[1]),imag:points.map(p=>p[2])};
 }
-if(typeof module!=="undefined")module.exports={parseSpectrum};
+function selectSpectrumPoints(data, excluded) {
+  const omitted=new Set(excluded);
+  if([...omitted].some(i=>!Number.isInteger(i)||i<0||i>=data.f.length))throw new Error("Ungültige Messpunktauswahl.");
+  const indices=data.f.map((_,i)=>i).filter(i=>!omitted.has(i));
+  if(indices.length<8)throw new Error("Für einen Fit müssen mindestens acht Messpunkte eingeschlossen bleiben.");
+  return {indices,f:indices.map(i=>data.f[i]),real:indices.map(i=>data.real[i]),imag:indices.map(i=>data.imag[i])};
+}
+if(typeof module!=="undefined")module.exports={parseSpectrum,selectSpectrumPoints};

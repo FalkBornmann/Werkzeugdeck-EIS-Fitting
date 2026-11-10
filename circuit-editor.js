@@ -54,5 +54,5 @@ function createCircuitEditor(container, preview, changed) {
     preview.replaceChildren(drawCircuit(root, {}));
   }
   render();
-  return {topology: () => root, lock: value => {locked=value; render();}};
+  return {topology: () => root, setTopology:tree=>{if(locked)return;root=validateCircuitTopology(tree);update();}, lock: value => {locked=value; render();}};
 }
